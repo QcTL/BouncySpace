@@ -10,21 +10,25 @@ private:
     float velocity;
     float velocityNoSlow;
     float maxVelocity;
+    int bounces;
     Rectangle recHead;
 
 public:
     Head(Vector2 startPos);
-    Vector2 getPosHead();
-    Vector2 getSizeHead();
-    Rectangle getRectangle();
+    Vector2 getPosHead() const;
+    Vector2 getSizeHead() const;
+    Rectangle getRectangle() const;
     void setDirAndDist(Vector2 nDir, float nDist);
+    void resetBounces();
+    int getBounces() const;
     void setVelocity(float t_velocity);
-    float getVelocity(int i);
+    float getVelocity(int i) const;
     void ActualizePosition(int screenWidth, int screenHeight);
 };
 
 Head::Head(Vector2 startPos)
 {
+    bounces = 0;
     posHead = startPos;
     Vector2 size;
     size.x = 20;
@@ -35,17 +39,17 @@ Head::Head(Vector2 startPos)
     recHead = {posHead.x, posHead.y, sizeHead.x, sizeHead.y};
 }
 
-Vector2 Head::getPosHead()
+Vector2 Head::getPosHead() const
 {
     return posHead;
 }
 
-Vector2 Head::getSizeHead()
+Vector2 Head::getSizeHead() const
 {
     return sizeHead;
 }
 
-Rectangle Head::getRectangle()
+Rectangle Head::getRectangle() const
 {
     return recHead;
 }
@@ -56,7 +60,7 @@ void Head::setVelocity(float t_velocity)
     velocity = t_velocity;
 }
 
-float Head::getVelocity(int i)
+float Head::getVelocity(int i) const
 {
     float velReturn;
     if (i == 0)
@@ -70,6 +74,18 @@ float Head::getVelocity(int i)
     return velReturn;
 }
 
+void reduceVelocity(int t_bounces, float &velocity)
+{
+    if (t_bounces == 0)
+    {
+        velocity = velocity * 0.6;
+    }
+    else
+    {
+        velocity = velocity * 0.2;
+    }
+}
+
 void Head::ActualizePosition(int screenWidth, int screenHeight)
 {
     Vector2 newPos;
@@ -77,7 +93,7 @@ void Head::ActualizePosition(int screenWidth, int screenHeight)
     if (posHead.y < 0 || posHead.y > screenHeight)
     {
         direction.y = direction.y * -1;
-        velocity = velocity * 0.75;
+        reduceVelocity(bounces, velocity);
         if (posHead.y < 0)
         {
             posHead.y = 0;
@@ -86,13 +102,12 @@ void Head::ActualizePosition(int screenWidth, int screenHeight)
         {
             posHead.y = screenHeight;
         }
-        printf("Xocat contra amunt");
+        bounces++;
     }
     if (posHead.x < 0 || posHead.x > screenWidth)
     {
         direction.x = direction.x * -1;
-        velocity = velocity * 0.75;
-        printf("Xocat contra amunt");
+        reduceVelocity(bounces, velocity);
         if (posHead.x < 0)
         {
             posHead.x = 0;
@@ -101,6 +116,7 @@ void Head::ActualizePosition(int screenWidth, int screenHeight)
         {
             posHead.x = screenWidth;
         }
+        bounces++;
     }
 
     newPos.x = posHead.x + direction.x * velocity;
@@ -108,6 +124,15 @@ void Head::ActualizePosition(int screenWidth, int screenHeight)
 
     posHead = newPos;
     recHead = {posHead.x, posHead.y, 20, 20};
+}
+void Head::resetBounces()
+{
+    bounces = 0;
+}
+
+int Head::getBounces() const
+{
+    return bounces;
 }
 
 void Head::setDirAndDist(Vector2 nDir, float nDist)

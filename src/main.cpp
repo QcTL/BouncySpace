@@ -9,46 +9,52 @@ const int screenHeight = 640;
 Vector2 startPointLine;
 Vector2 endPointLine;
 
+bool gameDead = false;
+
+int shots = 3;
 void DetectClicks(Head &h, float &timeSlow)
 {
-    if (IsMouseButtonPressed(0))
+    if (shots > 0)
     {
-        startPointLine = GetMousePosition();
-        h.setVelocity(h.getVelocity(0) / 5);
-        printf("NEW : %f - NoSlow: %f ", h.getVelocity(0), h.getVelocity(1));
-    }
-    else if (IsMouseButtonDown(0))
-    {
-        endPointLine = GetMousePosition();
-        DrawLineEx(startPointLine, endPointLine, 10, {212, 12, 45, 255});
-
-        if (timeSlow > 0)
+        if (IsMouseButtonPressed(0))
         {
-            h.setVelocity(h.getVelocity(0));
-            timeSlow -= GetFrameTime();
-            //printf("%f ", timeSlow);
+            startPointLine = GetMousePosition();
+            h.setVelocity(h.getVelocity(0) / 5);
         }
-        else
+        else if (IsMouseButtonDown(0))
         {
-            h.setVelocity(h.getVelocity(1));
+            endPointLine = GetMousePosition();
+            DrawLineEx(startPointLine, endPointLine, 10, {212, 12, 45, 255});
+
+            if (timeSlow > 0)
+            {
+                h.setVelocity(h.getVelocity(0));
+                timeSlow -= GetFrameTime();
+            }
+            else
+            {
+                h.setVelocity(h.getVelocity(1));
+            }
         }
-    }
 
-    //Quan deixem anar el boto enviara el VectorUnitari del angle:
-    if (IsMouseButtonReleased(0))
-    {
-        Vector2 vecUnitari;
-        float distancia;
-
-        float dirX = startPointLine.x - endPointLine.x;
-        float dirY = startPointLine.y - endPointLine.y;
-        distancia = abs(sqrt(dirX * dirX + dirY * dirY));
-        if (distancia > 5)
+        //Quan deixem anar el boto enviara el VectorUnitari del angle:
+        if (IsMouseButtonReleased(0))
         {
-            vecUnitari.x = dirX / distancia;
-            vecUnitari.y = dirY / distancia;
-            h.setDirAndDist(vecUnitari, distancia / 100);
-            timeSlow = 2;
+            h.resetBounces();
+            Vector2 vecUnitari;
+            float distancia;
+
+            float dirX = startPointLine.x - endPointLine.x;
+            float dirY = startPointLine.y - endPointLine.y;
+            distancia = abs(sqrt(dirX * dirX + dirY * dirY));
+            if (distancia > 5)
+            {
+                vecUnitari.x = dirX / distancia;
+                vecUnitari.y = dirY / distancia;
+                h.setDirAndDist(vecUnitari, distancia / 100);
+                timeSlow = 2;
+                shots--;
+            }
         }
     }
 }
@@ -87,7 +93,19 @@ void deleteScores(int index)
     }
     indexScores--;
 
-    printf("%f", indexScores);
+    shots = 3;
+    //Create a newScore
+    if (indexScores < 5)
+    {
+        for (int i = 0; i < GetRandomValue(1, 2); i++)
+        {
+            Vector2 posScore;
+            posScore.x = GetRandomValue(0, screenWidth);
+            posScore.y = GetRandomValue(0, screenHeight);
+            Score r = Score(posScore, 5, 10);
+            addScores(r);
+        }
+    }
 }
 
 void checkCollisionRecs(Head &h)
@@ -107,6 +125,63 @@ void checkCollisionRecs(Head &h)
     }
 }
 
+Vector2 posS1, posS2, posS3;
+Vector2 sizeS;
+void setShotsLeft()
+{
+    posS1.x = 550;
+    posS1.y = 600;
+
+    posS2.x = 550;
+    posS2.y = 570;
+
+    posS3.x = 550;
+    posS3.y = 540;
+
+    sizeS.x = 100;
+    sizeS.y = 25;
+}
+
+void renderShotsLeft()
+{
+    switch (shots)
+    {
+    case 3:
+    {
+        DrawRectangleV(posS1, sizeS, WHITE);
+        DrawRectangleV(posS2, sizeS, WHITE);
+        DrawRectangleV(posS3, sizeS, WHITE);
+    }
+    break;
+    case 2:
+    {
+        DrawRectangleV(posS1, sizeS, WHITE);
+        DrawRectangleV(posS2, sizeS, WHITE);
+    }
+    break;
+    case 1:
+    {
+        DrawRectangleV(posS1, sizeS, WHITE);
+    }
+    break;
+    default:
+        break;
+    }
+}
+
+void renderDeathScreen()
+{
+    DrawRectangle(0, 0, screenWidth, screenHeight, {0, 0, 0, 100});
+    DrawText(TextFormat("GAME OVER"), 50, 50, 90, WHITE);
+}
+void isDeadState(const Head &h)
+{
+    if (shots == 0 && h.getBounces() > 1)
+    {
+        gameDead = true;
+    }
+}
+
 int main(void)
 {
 
@@ -116,16 +191,18 @@ int main(void)
 
     Vector2 startPos;
     startPos.x = screenWidth / 2;
-    startPos.y = screenHeight / 2;
+    startPos.y = 200;
     Head h = Head(startPos);
     float timeSlow = 2;
 
-    //SCORE DE PROBA
+    //SCORE INCIAL
     Vector2 posScore;
-    posScore.x = 50;
-    posScore.y = 50;
+    posScore.x = screenWidth / 2;
+    posScore.y = screenHeight / 2;
     Score r = Score(posScore, 5, 10);
     addScores(r);
+
+    setShotsLeft();
 
     // Main game loop
     while (!WindowShouldClose())
@@ -137,11 +214,16 @@ int main(void)
 
         renderScores();
         checkCollisionRecs(h);
-        //DrawRectangleRec(r.getRectScore(), YELLOW);
 
         // Update
         DetectClicks(h, timeSlow);
         DrawRectangleRec(h.getRectangle(), BLUE);
+        renderShotsLeft();
+        isDeadState(h);
+        if (gameDead)
+        {
+            renderDeathScreen();
+        }
         BeginDrawing();
         ClearBackground({0, 1, 21, 255});
 
