@@ -37,7 +37,7 @@ void DetectClicks(Head &h, float &timeSlow)
             }
         }
 
-        //Quan deixem anar el boto enviara el VectorUnitari del angle:
+        //When released will send to VectorUnitarti the angle of rotation;
         if (IsMouseButtonReleased(0))
         {
             h.resetBounces();
@@ -187,7 +187,7 @@ int main(void)
 
     InitWindow(screenWidth, screenHeight, "Bouncy Space");
 
-    SetTargetFPS(60); // Set our game to run at 60 frames-per-second
+    SetTargetFPS(60);
 
     Vector2 startPos;
     startPos.x = screenWidth / 2;
@@ -195,7 +195,7 @@ int main(void)
     Head h = Head(startPos);
     float timeSlow = 2;
 
-    //SCORE INCIAL
+    //INITIAL SCORE
     Vector2 posScore;
     posScore.x = screenWidth / 2;
     posScore.y = screenHeight / 2;
@@ -208,10 +208,8 @@ int main(void)
     while (!WindowShouldClose())
     {
 
-        //Calculs
         h.ActualizePosition(screenWidth, screenHeight);
         showScore();
-
         renderScores();
         checkCollisionRecs(h);
 

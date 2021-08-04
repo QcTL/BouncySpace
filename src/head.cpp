@@ -89,7 +89,7 @@ void reduceVelocity(int t_bounces, float &velocity)
 void Head::ActualizePosition(int screenWidth, int screenHeight)
 {
     Vector2 newPos;
-    //Casos on s'ha de canviar la direccio per el xoc amb algun objecte
+    //Change direction of the head to bounce the walls
     if (posHead.y < 0 || posHead.y > screenHeight)
     {
         direction.y = direction.y * -1;
